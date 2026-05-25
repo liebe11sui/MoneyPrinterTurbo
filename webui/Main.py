@@ -538,21 +538,51 @@ with left_panel:
         )
         params.video_language = video_languages[selected_index][1]
 
+        # ====== 分镜模式开关 ======
+        if "storyboard_mode" not in st.session_state:
+            st.session_state["storyboard_mode"] = False
+        storyboard_mode = st.checkbox(
+            "🎬 分镜模式 (多场景独立画面，顺序叙事)",
+            value=st.session_state["storyboard_mode"],
+            key="storyboard_mode_cb",
+            help="开启后每个场景有独立的画面描述和旁白，按顺序拼接成完整视频",
+        )
+        st.session_state["storyboard_mode"] = storyboard_mode
+
+        scene_count = 5  # 默认值
+        if storyboard_mode:
+            scene_count = st.slider("分镜数量", min_value=2, max_value=8, value=5, step=1)
+
         if st.button(
-            tr("Generate Video Script and Keywords"), key="auto_generate_script"
+            tr("Generate Video Script and Keywords") if not storyboard_mode else "🎬 生成分镜脚本",
+            key="auto_generate_script",
         ):
             with st.spinner(tr("Generating Video Script and Keywords")):
-                script = llm.generate_script(
-                    video_subject=params.video_subject, language=params.video_language
-                )
-                terms = llm.generate_terms(params.video_subject, script)
-                if "Error: " in script:
-                    st.error(tr(script))
-                elif "Error: " in terms:
-                    st.error(tr(terms))
+                if storyboard_mode:
+                    import json as _json
+                    sb = llm.generate_storyboard(
+                        video_subject=params.video_subject,
+                        scene_count=scene_count,
+                        language=params.video_language,
+                    )
+                    st.session_state["video_script"] = _json.dumps(sb["scenes"], ensure_ascii=False, indent=2)
+                    st.session_state["video_terms"] = ", ".join(
+                        s["visual_prompt"] for s in sb["scenes"]
+                    )
+                    st.session_state["storyboard_data"] = sb
+                    st.success(f"✅ 生成 {len(sb['scenes'])} 个分镜")
                 else:
-                    st.session_state["video_script"] = script
-                    st.session_state["video_terms"] = ", ".join(terms)
+                    script = llm.generate_script(
+                        video_subject=params.video_subject, language=params.video_language
+                    )
+                    terms = llm.generate_terms(params.video_subject, script)
+                    if "Error: " in script:
+                        st.error(tr(script))
+                    elif "Error: " in terms:
+                        st.error(tr(terms))
+                    else:
+                        st.session_state["video_script"] = script
+                        st.session_state["video_terms"] = ", ".join(terms)
         params.video_script = st.text_area(
             tr("Video Script"), value=st.session_state["video_script"], height=280
         )

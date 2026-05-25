@@ -592,6 +592,63 @@ Please note that you must use English for generating video search terms; Chinese
     return search_terms
 
 
+def generate_storyboard(
+    video_subject: str,
+    scene_count: int = 5,
+    language: str = "",
+) -> dict:
+    """
+    生成分镜脚本 — 每个场景独立旁白 + 独立画面描述
+    
+    返回: {"scenes": [{scene_id, narration, visual_prompt, duration}, ...], "full_narration": "..."}
+    """
+    prompt = f"""# Role: Short Video Director
+
+Generate a {scene_count}-scene storyboard. Each scene MUST have DIFFERENT visual content.
+
+Return ONLY a JSON array (no markdown, no explanation):
+[
+  {{"scene_id": 1, "narration": "中文旁白15-30字", "visual_prompt": "English description 8-15 words, different shot for each scene", "duration": 5}},
+  ...
+]
+
+RULES:
+- Each visual_prompt must be UNIQUE — describe different camera angles/subjects
+- visual_prompt in ENGLISH only, 8-15 words, include camera direction
+- All narrations form one coherent story
+- duration: 5-6 seconds per scene
+- Scene 1 = hook, last scene = CTA/conclusion
+- Return ONLY the JSON array
+
+Video Subject: {video_subject}"""
+
+    if language:
+        prompt += f"\nLanguage: {language}"
+
+    logger.info(f"storyboard: {video_subject} ({scene_count} scenes)")
+
+    for attempt in range(_max_retries):
+        try:
+            response = _generate_response(prompt=prompt)
+            if not response:
+                continue
+            response = response.strip()
+            if response.startswith("```"):
+                response = "\n".join(response.split("\n")[1:])
+                if response.endswith("```"):
+                    response = response[:-3]
+            scenes = json.loads(response)
+            if not isinstance(scenes, list) or len(scenes) == 0:
+                raise ValueError("not a list")
+            full_narration = " ".join(s.get("narration", "") for s in scenes)
+            logger.success(f"storyboard: {len(scenes)} scenes")
+            return {"scenes": scenes, "full_narration": full_narration}
+        except Exception as e:
+            logger.warning(f"storyboard attempt {attempt+1}: {e}")
+
+    raise RuntimeError(f"storyboard failed: {video_subject}")
+
+
 if __name__ == "__main__":
     video_subject = "生命的意义是什么"
     script = generate_script(
