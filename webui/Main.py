@@ -40,153 +40,59 @@ st.set_page_config(
 
 streamlit_style = """
 <style>
-/* ====== MoneyPrinterTurbo Dark Theme ====== */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+/* Clean layout */
+.main .block-container { padding-top: 1rem; max-width: 1400px; }
+h1 { padding-top: 0 !important; font-size: 1.6rem !important; }
+h3 { font-size: 1rem !important; margin-bottom: 0.5rem !important; }
 
-* { font-family: 'Inter', 'Segoe UI', system-ui, sans-serif !important; }
-
-/* 整体背景 */
-.stApp {
-    background: linear-gradient(180deg, #0F0F1A 0%, #1A1A2E 100%);
-}
-.main .block-container {
-    padding-top: 1rem;
-}
-
-/* 标题 */
-h1 {
-    padding-top: 0 !important;
-    font-size: 1.8rem !important;
-    font-weight: 700 !important;
-    background: linear-gradient(135deg, #A78BFA, #7C3AED);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin-bottom: 0.5rem !important;
-}
-h2 { color: #F8FAFC !important; font-weight: 600 !important; }
-h3 {
-    color: #A78BFA !important;
-    font-weight: 600 !important;
-    font-size: 1.1rem !important;
+/* Tabs */
+.stTabs [data-baseweb="tab-list"] { gap: 2px; }
+.stTabs [data-baseweb="tab"] {
+    padding: 0.6rem 1.2rem !important;
+    font-weight: 500 !important;
+    border-radius: 8px 8px 0 0 !important;
 }
 
-/* 卡片/容器 */
+/* Cards */
 [data-testid="stVerticalBlockBorderWrapper"] {
-    background: #1A1A2E !important;
-    border: 1px solid #2D2D50 !important;
-    border-radius: 10px !important;
-    padding: 1.2rem !important;
-    box-shadow: 0 2px 12px rgba(124, 58, 237, 0.06) !important;
-}
-div[data-testid="stExpander"] {
-    background: #1A1A2E !important;
-    border: 1px solid #2D2D50 !important;
-    border-radius: 10px !important;
-}
-
-/* 输入框/下拉框/文本框 */
-input, textarea, [data-baseweb="select"] > div, [data-baseweb="input"] {
-    background-color: #252540 !important;
-    border: 1px solid #2D2D50 !important;
-    border-radius: 6px !important;
-    color: #F8FAFC !important;
-}
-input:focus, textarea:focus {
-    border-color: #7C3AED !important;
-    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2) !important;
-}
-.stTextArea textarea {
-    background: #252540 !important;
-    color: #F8FAFC !important;
-    border-color: #2D2D50 !important;
-    min-height: 120px !important;
-}
-
-/* Radio 按钮 */
-div[role="radiogroup"] label {
-    background: #1A1A2E !important;
-    border: 1px solid #2D2D50 !important;
     border-radius: 8px !important;
-    padding: 0.7rem 1rem !important;
-    margin: 0.3rem 0 !important;
-    color: #94A3B8 !important;
+    padding: 1rem !important;
+}
+
+/* Buttons */
+.stButton > button {
+    border-radius: 8px !important;
+    font-weight: 500 !important;
+}
+.stButton > button[kind="primary"] {
+    background: #7C3AED !important;
+    border-color: #7C3AED !important;
+}
+
+/* Storyboard mode radio cards */
+div[role="radiogroup"] label {
+    border: 2px solid #e5e7eb !important;
+    border-radius: 10px !important;
+    padding: 1rem !important;
+    margin: 0.4rem 0 !important;
     transition: all 0.2s;
 }
 div[role="radiogroup"] label:hover {
     border-color: #7C3AED !important;
-    color: #F8FAFC !important;
+    background: #f5f3ff !important;
 }
 div[role="radiogroup"] label:has(input:checked) {
-    background: linear-gradient(135deg, rgba(124,58,237,0.2), rgba(91,33,182,0.15)) !important;
     border-color: #7C3AED !important;
-    color: #A78BFA !important;
-    font-weight: 600 !important;
-    box-shadow: 0 0 12px rgba(124,58,237,0.15) !important;
+    background: #f5f3ff !important;
+    box-shadow: 0 0 0 1px #7C3AED !important;
 }
 
-/* 按钮 */
-.stButton > button {
-    background: linear-gradient(135deg, #7C3AED, #5B21B6) !important;
-    color: #FFFFFF !important;
-    border: none !important;
-    border-radius: 8px !important;
-    font-weight: 600 !important;
-    padding: 0.6rem 1.2rem !important;
-    transition: all 0.3s !important;
-}
-.stButton > button:hover {
-    background: linear-gradient(135deg, #A78BFA, #7C3AED) !important;
-    box-shadow: 0 4px 20px rgba(124, 58, 237, 0.35) !important;
-    transform: translateY(-1px);
-}
-.stButton > button[kind="secondary"] {
-    background: #252540 !important;
-    border: 1px solid #2D2D50 !important;
-}
-.stButton > button[kind="secondary"]:hover {
-    border-color: #7C3AED !important;
-    background: #2D2D50 !important;
-}
-
-/* 滑块 */
-[data-testid="stSlider"] > div { color: #A78BFA !important; }
-[data-testid="stSlider"] [role="slider"] { background: #7C3AED !important; }
-
-/* 消息框 */
-.stAlert { border-radius: 8px !important; }
-.stSuccess { background: rgba(16,185,129,0.1) !important; border: 1px solid rgba(16,185,129,0.3) !important; }
-.stWarning { background: rgba(245,158,11,0.1) !important; border: 1px solid rgba(245,158,11,0.3) !important; }
-.stInfo { background: rgba(6,182,212,0.1) !important; border: 1px solid rgba(6,182,212,0.3) !important; }
-
-/* 分隔线 */
-hr, .stDivider { border-color: #2D2D50 !important; }
-
-/* 注脚 */
-.stCaption { color: #64748B !important; font-size: 0.8rem; }
-
-/* Select box 下拉 */
-[data-baseweb="select"] [role="listbox"] {
-    background: #1A1A2E !important;
-    border: 1px solid #2D2D50 !important;
-    border-radius: 8px !important;
-}
-[data-baseweb="select"] [role="option"] {
-    color: #F8FAFC !important;
-}
-[data-baseweb="select"] [role="option"]:hover {
-    background: #252540 !important;
-}
-
-/* Checkbox */
-.stCheckbox label span { color: #94A3B8 !important; }
-
-/* Spinner */
-.stSpinner > div { border-top-color: #7C3AED !important; }
+/* Divider */
+.stDivider { margin: 0.5rem 0 !important; }
 
 /* File uploader */
 [data-testid="stFileUploader"] {
-    background: #1A1A2E !important;
-    border: 1px dashed #2D2D50 !important;
+    border: 1px dashed #d1d5db !important;
     border-radius: 8px !important;
 }
 </style>
@@ -671,16 +577,20 @@ if not config.app.get("hide_config", False):
                 st.warning("⚠️ 需配置 Access Key 和 Secret Key 才能使用 AI 视频生成")
 
 llm_provider = config.app.get("llm_provider", "").lower()
-panel = st.columns(3)
-left_panel = panel[0]
-middle_panel = panel[1]
-right_panel = panel[2]
 
 params = VideoParams(video_subject="")
 uploaded_files = []
 uploaded_audio_file = None
 
-with left_panel:
+# ====== Tab 页布局 ======
+tab_gen, tab_video, tab_audio, tab_subtitle = st.tabs([
+    "🎬 视频生成",
+    "⚙️ 视频设置",
+    "🔊 音频设置", 
+    "📝 字幕设置",
+])
+
+with tab_gen:
     with st.container(border=True):
         st.write(tr("Video Script Settings"))
         params.video_subject = st.text_input(
@@ -707,23 +617,27 @@ with left_panel:
         )
         params.video_language = video_languages[selected_index][1]
 
-        # ====== 视频生成模式 ======
-        if "storyboard_mode" not in st.session_state:
-            st.session_state["storyboard_mode"] = False
-
-        # 默认视频参数
-        use_inference = False
-        engine_mode = config.app.get("kling_mode", "std")
-        selected_model = config.app.get("kling_model", "kling-v1-6")
-        engine_ratio = config.app.get("kling_aspect_ratio", "9:16")
-        ref_image_path = None
-
         st.divider()
-        st.markdown("### 🎬 生成模式")
+
+    # ====== 视频生成模式选择 ======
+    if "storyboard_mode" not in st.session_state:
+        st.session_state["storyboard_mode"] = False
+
+    # 默认视频参数
+    use_inference = False
+    engine_mode = config.app.get("kling_mode", "std")
+    selected_model = config.app.get("kling_model", "kling-v1-6")
+    engine_ratio = config.app.get("kling_aspect_ratio", "9:16")
+    ref_image_path = None
+
+    with st.container(border=True):
+        st.subheader("🎬 生成模式", divider=False)
+        st.caption("选择普通模式用现有素材自动剪辑，或分镜模式用 AI 逐场景生成视频")
 
         gen_mode = st.radio(
             "选择视频生成方式",
-            options=["📝 普通模式 (单主题 → 自动剪辑)", "🎬 分镜叙事 (AI生成多场景 → 可灵视频 → 拼接)"],
+            options=["📝 普通模式 — 单主题 → 自动搜索素材 → 剪辑合成",
+                     "🎬 分镜叙事 — AI拆分为多场景 → 引擎逐帧生成 → TTS配音拼接"],
             index=1 if st.session_state["storyboard_mode"] else 0,
             horizontal=False,
             key="gen_mode_radio",
@@ -733,124 +647,122 @@ with left_panel:
 
         scene_count = 5
         if storyboard_mode:
-            with st.container(border=True):
-                st.caption("LLM 自动拆分主题为多个场景，每场景独立生成画面描述 → 可灵 API 生成视频 → TTS 配音 → 拼接")
+            st.divider()
+            st.caption("以下参数控制分镜生成行为和视频引擎选择")
 
-                scene_count = st.slider("分镜数量", min_value=2, max_value=8, value=5, step=1)
+            scene_count = st.slider("分镜数量", min_value=2, max_value=8, value=5, step=1)
+            st.caption(f"将生成 {scene_count} 个独立场景，每个场景单独调用 AI 引擎生成视频")
 
-                # ---- 视频引擎 + 参数 ----
-                st.divider()
-                st.markdown("**🎥 视频引擎与参数**")
+            # ---- 视频引擎 + 参数 ----
+            st.divider()
+            st.markdown("**🎥 视频引擎与参数**")
 
-                # 引擎选择
-                col_eng, col_mode = st.columns(2)
-                with col_eng:
-                    video_engine = st.selectbox(
-                        "视频引擎",
-                        options=[
-                            "🦎 Kling 可灵 (国内快，简单)",
-                            "🌐 Inference.sh (40+模型，Seedance/Wan/HappyHorse)",
-                        ],
-                        index=0,
-                        key="video_engine",
-                        help="Kling=可灵国内API | Inference.sh=全球40+模型，belt login后可用",
-                    )
-                    use_inference = "Inference" in video_engine
-
-                with col_mode:
-                    video_mode = st.selectbox(
-                        "画质模式",
-                        options=["std (标准/快)", "pro (高画质/慢)"],
-                        index=0,
-                        key="video_quality",
-                    )
-                    engine_mode = "pro" if "pro" in video_mode else "std"
-
-                # 模型选择（根据引擎不同）
-                if use_inference:
-                    model_options = [
-                        ("🍿 Seedance 2.0 (ByteDance) — 抖音同门，1080p", "bytedance/seedance-2-0"),
-                        ("⚡ Seedance 2.0 Fast — 快速版", "bytedance/seedance-2-0-fast"),
-                        ("🐴 HappyHorse T2V (阿里) — 物理真实，15秒", "alibaba/happyhorse-1-0-t2v"),
-                        ("🖼️ HappyHorse I2V (阿里) — 图生视频", "alibaba/happyhorse-1-0-i2v"),
-                        ("🎨 Wan 2.5 (FAL) — 高质量图生视频", "falai/wan-2-5"),
-                        ("💰 P-Video — 经济实惠", "pruna/p-video"),
-                        ("🤖 Veo 3.1 Fast (Google) — 最快文生视频", "google/veo-3-1-fast"),
-                        ("🦾 Grok Video (xAI) — 马斯克", "xai/grok-imagine-video"),
-                        ("👤 OmniHuman (ByteDance) — 数字人", "bytedance/omnihuman-1-5"),
-                    ]
-                    default_model_idx = 0
-                else:
-                    model_options = [
-                        ("Kling v1-6 (推荐)", "kling-v1-6"),
-                        ("Kling v1-5", "kling-v1-5"),
-                        ("Kling v2 (最新)", "kling-v2"),
-                        ("Kling v2 Master", "kling-v2-master"),
-                    ]
-                    default_model_idx = 0
-
-                col_model, col_ratio = st.columns(2)
-                with col_model:
-                    model_choice = st.selectbox(
-                        "模型",
-                        options=[m[0] for m in model_options],
-                        index=default_model_idx,
-                        key="video_model",
-                    )
-                    selected_model = dict(model_options)[model_choice]
-
-                with col_ratio:
-                    ratio_display = st.selectbox(
-                        "画面比例",
-                        options=["16:9 (横屏)", "9:16 (竖屏/抖音)", "1:1 (方形)"],
-                        index=1,
-                        key="video_ratio",
-                    )
-                    if "9:16" in ratio_display:
-                        engine_ratio = "9:16"
-                    elif "1:1" in ratio_display:
-                        engine_ratio = "1:1"
-                    else:
-                        engine_ratio = "16:9"
-
-                # 引擎状态提示
-                if use_inference:
-                    st.caption("⚠️ 需要先运行 `belt login` 登录 inference.sh（一次性）")
-
-                # ---- 图生视频 ----
-                st.divider()
-                st.markdown("**🖼️ 参考图片 (可选)**")
-                ref_image = st.file_uploader(
-                    "上传商品图或其他参考图 → 开启图生视频模式",
-                    type=["jpg", "jpeg", "png", "webp"],
-                    key="kling_ref_image",
-                    help="上传后，AI将基于此图生成动态视频（商品展示等）",
+            col_eng, col_mode = st.columns(2)
+            with col_eng:
+                video_engine = st.selectbox(
+                    "视频引擎",
+                    options=[
+                        "🦎 Kling 可灵 (国内快，简单)",
+                        "🌐 Inference.sh (40+模型，Seedance/Wan/HappyHorse)",
+                    ],
+                    index=0,
+                    key="video_engine",
+                    help="Kling=可灵国内API | Inference.sh=全球40+模型，belt login后可用",
                 )
-                ref_image_path = None
-                if ref_image:
-                    import tempfile
-                    tmp_dir = tempfile.mkdtemp()
-                    ref_image_path = os.path.join(tmp_dir, ref_image.name)
-                    with open(ref_image_path, "wb") as f:
-                        f.write(ref_image.getvalue())
-                    st.success(f"✅ 参考图已上传: {ref_image.name}")
-                    st.session_state["kling_ref_image_path"] = ref_image_path
+                use_inference = "Inference" in video_engine
 
-                # 恢复已上传的路径
-                if "kling_ref_image_path" in st.session_state and not ref_image:
-                    ref_image_path = st.session_state["kling_ref_image_path"]
+            with col_mode:
+                video_mode = st.selectbox(
+                    "画质模式",
+                    options=["std (标准/快)", "pro (高画质/慢)"],
+                    index=0,
+                    key="video_quality",
+                )
+                engine_mode = "pro" if "pro" in video_mode else "std"
 
-                # ---- API 状态 ----
-                if use_inference:
-                    st.info("🌐 Inference.sh 引擎 — 40+模型可选，需 belt login")
+            # 模型选择（根据引擎不同）
+            if use_inference:
+                model_options = [
+                    ("🍿 Seedance 2.0 (ByteDance) — 抖音同门，1080p", "bytedance/seedance-2-0"),
+                    ("⚡ Seedance 2.0 Fast — 快速版", "bytedance/seedance-2-0-fast"),
+                    ("🐴 HappyHorse T2V (阿里) — 物理真实，15秒", "alibaba/happyhorse-1-0-t2v"),
+                    ("🖼️ HappyHorse I2V (阿里) — 图生视频", "alibaba/happyhorse-1-0-i2v"),
+                    ("🎨 Wan 2.5 (FAL) — 高质量图生视频", "falai/wan-2-5"),
+                    ("💰 P-Video — 经济实惠", "pruna/p-video"),
+                    ("🤖 Veo 3.1 Fast (Google) — 最快文生视频", "google/veo-3-1-fast"),
+                    ("🦾 Grok Video (xAI) — 马斯克", "xai/grok-imagine-video"),
+                    ("👤 OmniHuman (ByteDance) — 数字人", "bytedance/omnihuman-1-5"),
+                ]
+            else:
+                model_options = [
+                    ("Kling v1-6 (推荐)", "kling-v1-6"),
+                    ("Kling v1-5", "kling-v1-5"),
+                    ("Kling v2 (最新)", "kling-v2"),
+                    ("Kling v2 Master", "kling-v2-master"),
+                ]
+
+            col_model, col_ratio = st.columns(2)
+            with col_model:
+                model_choice = st.selectbox(
+                    "模型",
+                    options=[m[0] for m in model_options],
+                    index=0,
+                    key="video_model",
+                )
+                selected_model = dict(model_options)[model_choice]
+
+            with col_ratio:
+                ratio_display = st.selectbox(
+                    "画面比例",
+                    options=["16:9 (横屏)", "9:16 (竖屏/抖音)", "1:1 (方形)"],
+                    index=1,
+                    key="video_ratio",
+                )
+                if "9:16" in ratio_display:
+                    engine_ratio = "9:16"
+                elif "1:1" in ratio_display:
+                    engine_ratio = "1:1"
                 else:
-                    has_kling = config.app.get("kling_access_key") and config.app.get("kling_secret_key")
-                    if not has_kling:
-                        st.warning("⚠️ 尚未配置可灵 API Key（展开顶部 Basic Settings → 右侧 Kling 区域）")
-                    elif ref_image_path:
-                        st.info("🖼️ 图生视频模式：AI 将基于参考图 + prompt 生成动态展示视频")
-                    else:
-                        st.info("📝 文生视频模式：AI 根据分镜描述从零生成视频")
+                    engine_ratio = "16:9"
+
+            # 引擎状态
+            if use_inference:
+                st.caption("⚠️ 需要先运行 `belt login` 登录 inference.sh（一次性）")
+
+            # ---- 图生视频 ----
+            st.divider()
+            st.markdown("**🖼️ 参考图片 (可选)**")
+            ref_image = st.file_uploader(
+                "上传商品图或其他参考图 → 开启图生视频模式",
+                type=["jpg", "jpeg", "png", "webp"],
+                key="kling_ref_image",
+                help="上传后，AI将基于此图生成动态视频（商品展示等）",
+            )
+            ref_image_path = None
+            if ref_image:
+                import tempfile
+                tmp_dir = tempfile.mkdtemp()
+                ref_image_path = os.path.join(tmp_dir, ref_image.name)
+                with open(ref_image_path, "wb") as f:
+                    f.write(ref_image.getvalue())
+                st.success(f"✅ 参考图已上传: {ref_image.name}")
+                st.session_state["kling_ref_image_path"] = ref_image_path
+
+            # 恢复已上传的路径
+            if "kling_ref_image_path" in st.session_state and not ref_image:
+                ref_image_path = st.session_state["kling_ref_image_path"]
+
+            # ---- API 状态 ----
+            if use_inference:
+                st.info("🌐 Inference.sh 引擎 — 40+模型可选，需 belt login")
+            else:
+                has_kling = config.app.get("kling_access_key") and config.app.get("kling_secret_key")
+                if not has_kling:
+                    st.warning("⚠️ 尚未配置可灵 API Key（展开顶部 Basic Settings → 右侧 Kling 区域）")
+                elif ref_image_path:
+                    st.info("🖼️ 图生视频模式：AI 将基于参考图 + prompt 生成动态展示视频")
+                else:
+                    st.info("📝 文生视频模式：AI 根据分镜描述从零生成视频")
 
         if st.button(
             tr("Generate Video Script and Keywords") if not storyboard_mode else "🎬 生成分镜脚本",
@@ -912,7 +824,7 @@ with left_panel:
             tr("Video Keywords"), value=st.session_state["video_terms"]
         )
 
-with middle_panel:
+with tab_video:
     with st.container(border=True):
         st.write(tr("Video Settings"))
         video_concat_modes = [
@@ -1007,6 +919,8 @@ with middle_panel:
             options=[1, 2, 3, 4, 5],
             index=0,
         )
+
+with tab_audio:
     with st.container(border=True):
         st.write(tr("Audio Settings"))
 
@@ -1248,7 +1162,7 @@ with middle_panel:
             index=2,
         )
 
-with right_panel:
+with tab_subtitle:
     with st.container(border=True):
         st.write(tr("Subtitle Settings"))
         params.subtitle_enabled = st.checkbox(tr("Enable Subtitles"), value=True)
