@@ -568,10 +568,11 @@ with left_panel:
         if "storyboard_mode" not in st.session_state:
             st.session_state["storyboard_mode"] = False
 
-        # 默认 Kling 参数
-        kling_mode = config.app.get("kling_mode", "std")
-        kling_model = config.app.get("kling_model", "kling-v1-6")
-        kling_ratio = config.app.get("kling_aspect_ratio", "9:16")
+        # 默认视频参数
+        use_inference = False
+        engine_mode = config.app.get("kling_mode", "std")
+        selected_model = config.app.get("kling_model", "kling-v1-6")
+        engine_ratio = config.app.get("kling_aspect_ratio", "9:16")
         ref_image_path = None
 
         st.divider()
@@ -594,44 +595,84 @@ with left_panel:
 
                 scene_count = st.slider("分镜数量", min_value=2, max_value=8, value=5, step=1)
 
-                # ---- Kling 视频参数 ----
+                # ---- 视频引擎 + 参数 ----
                 st.divider()
-                st.markdown("**🎥 视频参数**")
+                st.markdown("**🎥 视频引擎与参数**")
 
-                col_a, col_b = st.columns(2)
-                with col_a:
+                # 引擎选择
+                col_eng, col_mode = st.columns(2)
+                with col_eng:
+                    video_engine = st.selectbox(
+                        "视频引擎",
+                        options=[
+                            "🦎 Kling 可灵 (国内快，简单)",
+                            "🌐 Inference.sh (40+模型，Seedance/Wan/HappyHorse)",
+                        ],
+                        index=0,
+                        key="video_engine",
+                        help="Kling=可灵国内API | Inference.sh=全球40+模型，belt login后可用",
+                    )
+                    use_inference = "Inference" in video_engine
+
+                with col_mode:
                     video_mode = st.selectbox(
                         "画质模式",
-                        options=["std (标准)", "pro (高画质)"],
+                        options=["std (标准/快)", "pro (高画质/慢)"],
                         index=0,
-                        help="std=快速低费  pro=高画质约3-5分钟/条",
-                        key="kling_mode",
+                        key="video_quality",
                     )
-                    kling_mode = "pro" if "pro" in video_mode else "std"
+                    engine_mode = "pro" if "pro" in video_mode else "std"
 
-                    model_version = st.selectbox(
-                        "模型版本",
-                        options=["kling-v1-6 (推荐)", "kling-v1-5", "kling-v2 (最新)", "kling-v2-master"],
-                        index=0,
-                        key="kling_model",
+                # 模型选择（根据引擎不同）
+                if use_inference:
+                    model_options = [
+                        ("🍿 Seedance 2.0 (ByteDance) — 抖音同门，1080p", "bytedance/seedance-2-0"),
+                        ("⚡ Seedance 2.0 Fast — 快速版", "bytedance/seedance-2-0-fast"),
+                        ("🐴 HappyHorse T2V (阿里) — 物理真实，15秒", "alibaba/happyhorse-1-0-t2v"),
+                        ("🖼️ HappyHorse I2V (阿里) — 图生视频", "alibaba/happyhorse-1-0-i2v"),
+                        ("🎨 Wan 2.5 (FAL) — 高质量图生视频", "falai/wan-2-5"),
+                        ("💰 P-Video — 经济实惠", "pruna/p-video"),
+                        ("🤖 Veo 3.1 Fast (Google) — 最快文生视频", "google/veo-3-1-fast"),
+                        ("🦾 Grok Video (xAI) — 马斯克", "xai/grok-imagine-video"),
+                        ("👤 OmniHuman (ByteDance) — 数字人", "bytedance/omnihuman-1-5"),
+                    ]
+                    default_model_idx = 0
+                else:
+                    model_options = [
+                        ("Kling v1-6 (推荐)", "kling-v1-6"),
+                        ("Kling v1-5", "kling-v1-5"),
+                        ("Kling v2 (最新)", "kling-v2"),
+                        ("Kling v2 Master", "kling-v2-master"),
+                    ]
+                    default_model_idx = 0
+
+                col_model, col_ratio = st.columns(2)
+                with col_model:
+                    model_choice = st.selectbox(
+                        "模型",
+                        options=[m[0] for m in model_options],
+                        index=default_model_idx,
+                        key="video_model",
                     )
+                    selected_model = dict(model_options)[model_choice]
 
-                with col_b:
+                with col_ratio:
                     ratio_display = st.selectbox(
                         "画面比例",
                         options=["16:9 (横屏)", "9:16 (竖屏/抖音)", "1:1 (方形)"],
                         index=1,
-                        help="抖音推流推荐 9:16 竖版",
-                        key="kling_ratio",
+                        key="video_ratio",
                     )
                     if "9:16" in ratio_display:
-                        kling_ratio = "9:16"
+                        engine_ratio = "9:16"
                     elif "1:1" in ratio_display:
-                        kling_ratio = "1:1"
+                        engine_ratio = "1:1"
                     else:
-                        kling_ratio = "16:9"
+                        engine_ratio = "16:9"
 
-                    kling_model = model_version.split(" ")[0]
+                # 引擎状态提示
+                if use_inference:
+                    st.caption("⚠️ 需要先运行 `belt login` 登录 inference.sh（一次性）")
 
                 # ---- 图生视频 ----
                 st.divider()
@@ -657,13 +698,16 @@ with left_panel:
                     ref_image_path = st.session_state["kling_ref_image_path"]
 
                 # ---- API 状态 ----
-                has_kling = config.app.get("kling_access_key") and config.app.get("kling_secret_key")
-                if not has_kling:
-                    st.warning("⚠️ 尚未配置可灵 API Key（展开顶部 Basic Settings → 右侧 Kling 区域）")
-                elif ref_image_path:
-                    st.info("🖼️ 图生视频模式：AI 将基于参考图 + prompt 生成动态展示视频")
+                if use_inference:
+                    st.info("🌐 Inference.sh 引擎 — 40+模型可选，需 belt login")
                 else:
-                    st.info("📝 文生视频模式：AI 根据分镜描述从零生成视频")
+                    has_kling = config.app.get("kling_access_key") and config.app.get("kling_secret_key")
+                    if not has_kling:
+                        st.warning("⚠️ 尚未配置可灵 API Key（展开顶部 Basic Settings → 右侧 Kling 区域）")
+                    elif ref_image_path:
+                        st.info("🖼️ 图生视频模式：AI 将基于参考图 + prompt 生成动态展示视频")
+                    else:
+                        st.info("📝 文生视频模式：AI 根据分镜描述从零生成视频")
 
         if st.button(
             tr("Generate Video Script and Keywords") if not storyboard_mode else "🎬 生成分镜脚本",
@@ -684,14 +728,16 @@ with left_panel:
                         s["visual_prompt"] for s in sb
                     )
                     st.session_state["storyboard_data"] = sb
-                    # 保存 Kling 参数到 session state
-                    st.session_state["kling_params"] = {
-                        "mode": kling_mode,
-                        "model": kling_model,
-                        "aspect_ratio": kling_ratio,
+                    # 保存视频参数到 session state
+                    st.session_state["video_gen_params"] = {
+                        "engine": "inference" if use_inference else "kling",
+                        "mode": engine_mode,
+                        "model": selected_model,
+                        "aspect_ratio": engine_ratio,
                         "ref_image_path": ref_image_path,
                     }
-                    st.success(f"✅ 生成 {len(sb)} 个分镜 ({kling_mode}/{kling_ratio}/{kling_model})")
+                    engine_label = "🌐" if use_inference else "🦎"
+                    st.success(f"✅ 生成 {len(sb)} 个分镜 ({engine_label} {selected_model})")
                 else:
                     script = llm.generate_script(
                         video_subject=params.video_subject, language=params.video_language
