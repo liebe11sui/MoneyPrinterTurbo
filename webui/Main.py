@@ -27,24 +27,167 @@ from app.services import task as tm
 from app.utils import utils
 
 st.set_page_config(
-    page_title="MoneyPrinterTurbo",
-    page_icon="🤖",
+    page_title="MoneyPrinterTurbo — AI视频工厂",
+    page_icon="🎬",
     layout="wide",
     initial_sidebar_state="auto",
     menu_items={
-        "Report a bug": "https://github.com/harry0703/MoneyPrinterTurbo/issues",
-        "About": "# MoneyPrinterTurbo\nSimply provide a topic or keyword for a video, and it will "
-        "automatically generate the video copy, video materials, video subtitles, "
-        "and video background music before synthesizing a high-definition short "
-        "video.\n\nhttps://github.com/harry0703/MoneyPrinterTurbo",
+        "Report a bug": "https://github.com/liebe11sui/MoneyPrinterTurbo/issues",
+        "About": "# MoneyPrinterTurbo 🎬\\nAI视频工厂 — 分镜叙事 + Kling可灵 + Inference.sh 40+模型",
     },
 )
 
 
 streamlit_style = """
 <style>
+/* ====== MoneyPrinterTurbo Dark Theme ====== */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+* { font-family: 'Inter', 'Segoe UI', system-ui, sans-serif !important; }
+
+/* 整体背景 */
+.stApp {
+    background: linear-gradient(180deg, #0F0F1A 0%, #1A1A2E 100%);
+}
+.main .block-container {
+    padding-top: 1rem;
+}
+
+/* 标题 */
 h1 {
     padding-top: 0 !important;
+    font-size: 1.8rem !important;
+    font-weight: 700 !important;
+    background: linear-gradient(135deg, #A78BFA, #7C3AED);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.5rem !important;
+}
+h2 { color: #F8FAFC !important; font-weight: 600 !important; }
+h3 {
+    color: #A78BFA !important;
+    font-weight: 600 !important;
+    font-size: 1.1rem !important;
+}
+
+/* 卡片/容器 */
+[data-testid="stVerticalBlockBorderWrapper"] {
+    background: #1A1A2E !important;
+    border: 1px solid #2D2D50 !important;
+    border-radius: 10px !important;
+    padding: 1.2rem !important;
+    box-shadow: 0 2px 12px rgba(124, 58, 237, 0.06) !important;
+}
+div[data-testid="stExpander"] {
+    background: #1A1A2E !important;
+    border: 1px solid #2D2D50 !important;
+    border-radius: 10px !important;
+}
+
+/* 输入框/下拉框/文本框 */
+input, textarea, [data-baseweb="select"] > div, [data-baseweb="input"] {
+    background-color: #252540 !important;
+    border: 1px solid #2D2D50 !important;
+    border-radius: 6px !important;
+    color: #F8FAFC !important;
+}
+input:focus, textarea:focus {
+    border-color: #7C3AED !important;
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2) !important;
+}
+.stTextArea textarea {
+    background: #252540 !important;
+    color: #F8FAFC !important;
+    border-color: #2D2D50 !important;
+    min-height: 120px !important;
+}
+
+/* Radio 按钮 */
+div[role="radiogroup"] label {
+    background: #1A1A2E !important;
+    border: 1px solid #2D2D50 !important;
+    border-radius: 8px !important;
+    padding: 0.7rem 1rem !important;
+    margin: 0.3rem 0 !important;
+    color: #94A3B8 !important;
+    transition: all 0.2s;
+}
+div[role="radiogroup"] label:hover {
+    border-color: #7C3AED !important;
+    color: #F8FAFC !important;
+}
+div[role="radiogroup"] label:has(input:checked) {
+    background: linear-gradient(135deg, rgba(124,58,237,0.2), rgba(91,33,182,0.15)) !important;
+    border-color: #7C3AED !important;
+    color: #A78BFA !important;
+    font-weight: 600 !important;
+    box-shadow: 0 0 12px rgba(124,58,237,0.15) !important;
+}
+
+/* 按钮 */
+.stButton > button {
+    background: linear-gradient(135deg, #7C3AED, #5B21B6) !important;
+    color: #FFFFFF !important;
+    border: none !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    padding: 0.6rem 1.2rem !important;
+    transition: all 0.3s !important;
+}
+.stButton > button:hover {
+    background: linear-gradient(135deg, #A78BFA, #7C3AED) !important;
+    box-shadow: 0 4px 20px rgba(124, 58, 237, 0.35) !important;
+    transform: translateY(-1px);
+}
+.stButton > button[kind="secondary"] {
+    background: #252540 !important;
+    border: 1px solid #2D2D50 !important;
+}
+.stButton > button[kind="secondary"]:hover {
+    border-color: #7C3AED !important;
+    background: #2D2D50 !important;
+}
+
+/* 滑块 */
+[data-testid="stSlider"] > div { color: #A78BFA !important; }
+[data-testid="stSlider"] [role="slider"] { background: #7C3AED !important; }
+
+/* 消息框 */
+.stAlert { border-radius: 8px !important; }
+.stSuccess { background: rgba(16,185,129,0.1) !important; border: 1px solid rgba(16,185,129,0.3) !important; }
+.stWarning { background: rgba(245,158,11,0.1) !important; border: 1px solid rgba(245,158,11,0.3) !important; }
+.stInfo { background: rgba(6,182,212,0.1) !important; border: 1px solid rgba(6,182,212,0.3) !important; }
+
+/* 分隔线 */
+hr, .stDivider { border-color: #2D2D50 !important; }
+
+/* 注脚 */
+.stCaption { color: #64748B !important; font-size: 0.8rem; }
+
+/* Select box 下拉 */
+[data-baseweb="select"] [role="listbox"] {
+    background: #1A1A2E !important;
+    border: 1px solid #2D2D50 !important;
+    border-radius: 8px !important;
+}
+[data-baseweb="select"] [role="option"] {
+    color: #F8FAFC !important;
+}
+[data-baseweb="select"] [role="option"]:hover {
+    background: #252540 !important;
+}
+
+/* Checkbox */
+.stCheckbox label span { color: #94A3B8 !important; }
+
+/* Spinner */
+.stSpinner > div { border-top-color: #7C3AED !important; }
+
+/* File uploader */
+[data-testid="stFileUploader"] {
+    background: #1A1A2E !important;
+    border: 1px dashed #2D2D50 !important;
+    border-radius: 8px !important;
 }
 </style>
 """
