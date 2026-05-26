@@ -501,6 +501,32 @@ if not config.app.get("hide_config", False):
             )
             save_keys_to_config("pixabay_api_keys", pixabay_api_key)
 
+            # ====== Kling 可灵 API 设置 ======
+            st.divider()
+            st.markdown("🎬 **可灵 (Kling) AI 视频生成**")
+            st.caption("[去可灵开放平台获取 Access Key / Secret Key](https://platform.klingai.com/)")
+
+            kling_ak = st.text_input(
+                "Kling Access Key",
+                value=config.app.get("kling_access_key", ""),
+                type="password",
+            )
+            if kling_ak:
+                config.app["kling_access_key"] = kling_ak
+
+            kling_sk = st.text_input(
+                "Kling Secret Key",
+                value=config.app.get("kling_secret_key", ""),
+                type="password",
+            )
+            if kling_sk:
+                config.app["kling_secret_key"] = kling_sk
+
+            if kling_ak and kling_sk:
+                st.success("✅ 可灵 API 已配置", icon="🎬")
+            else:
+                st.warning("⚠️ 需配置 Access Key 和 Secret Key 才能使用 AI 视频生成")
+
 llm_provider = config.app.get("llm_provider", "").lower()
 panel = st.columns(3)
 left_panel = panel[0]
@@ -538,24 +564,45 @@ with left_panel:
         )
         params.video_language = video_languages[selected_index][1]
 
-        # ====== 分镜模式开关 ======
+        # ====== 视频生成模式 ======
         if "storyboard_mode" not in st.session_state:
             st.session_state["storyboard_mode"] = False
-        storyboard_mode = st.checkbox(
-            "🎬 分镜模式 (多场景独立画面，顺序叙事)",
-            value=st.session_state["storyboard_mode"],
-            key="storyboard_mode_cb",
-            help="开启后每个场景有独立的画面描述和旁白，按顺序拼接成完整视频",
+
+        st.divider()
+        st.markdown("### 🎬 生成模式")
+
+        gen_mode = st.radio(
+            "选择视频生成方式",
+            options=["📝 普通模式 (单主题 → 自动剪辑)", "🎬 分镜叙事 (AI生成多场景 → Kling视频 → 顺序拼接)"],
+            index=1 if st.session_state["storyboard_mode"] else 0,
+            horizontal=False,
+            key="gen_mode_radio",
         )
+        storyboard_mode = "分镜叙事" in gen_mode
         st.session_state["storyboard_mode"] = storyboard_mode
 
-        scene_count = 5  # 默认值
+        scene_count = 5
         if storyboard_mode:
-            scene_count = st.slider("分镜数量", min_value=2, max_value=8, value=5, step=1)
+            with st.container(border=True):
+                st.markdown("""
+                **分镜叙事模式**：LLM 自动将主题拆分为多个场景 → 
+                每个场景生成独立的画面描述和旁白 → 按场景顺序拼接成完整叙事视频
+                """)
+                scene_count = st.slider(
+                    "分镜数量",
+                    min_value=2, max_value=8, value=5, step=1,
+                    help="场景越多，视频越长越丰富（但生成时间也越长）",
+                )
+                # 提示 Kling API 状态
+                has_kling = config.app.get("kling_access_key") and config.app.get("kling_secret_key")
+                if not has_kling:
+                    st.warning("⚠️ 尚未配置可灵 API（在左侧 Basic Settings 中配置）")
 
         if st.button(
             tr("Generate Video Script and Keywords") if not storyboard_mode else "🎬 生成分镜脚本",
             key="auto_generate_script",
+            use_container_width=True,
+            type="primary" if storyboard_mode else "secondary",
         ):
             with st.spinner(tr("Generating Video Script and Keywords")):
                 if storyboard_mode:

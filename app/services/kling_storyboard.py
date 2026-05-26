@@ -21,9 +21,17 @@ from loguru import logger
 # ============================================================
 KLING_API_BASE = "https://api.klingai.com/v1"
 
-# Access Key ID + Secret Key (从可灵开放平台获取)
-KLING_ACCESS_KEY = os.environ.get("KLING_ACCESS_KEY", "你的AK")
-KLING_SECRET_KEY = os.environ.get("KLING_SECRET_KEY", "你的SK")
+def _get_kling_keys():
+    """从 config.toml 读取可灵 API 密钥，fallback 到环境变量"""
+    try:
+        from app.config import config as app_cfg
+        ak = app_cfg.app.get("kling_access_key", "") or os.environ.get("KLING_ACCESS_KEY", "")
+        sk = app_cfg.app.get("kling_secret_key", "") or os.environ.get("KLING_SECRET_KEY", "")
+        return ak, sk
+    except Exception:
+        return os.environ.get("KLING_ACCESS_KEY", ""), os.environ.get("KLING_SECRET_KEY", "")
+
+KLING_ACCESS_KEY, KLING_SECRET_KEY = _get_kling_keys()
 
 
 # ============================================================
