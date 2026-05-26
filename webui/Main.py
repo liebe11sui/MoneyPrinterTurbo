@@ -568,12 +568,18 @@ with left_panel:
         if "storyboard_mode" not in st.session_state:
             st.session_state["storyboard_mode"] = False
 
+        # 默认 Kling 参数
+        kling_mode = config.app.get("kling_mode", "std")
+        kling_model = config.app.get("kling_model", "kling-v1-6")
+        kling_ratio = config.app.get("kling_aspect_ratio", "9:16")
+        ref_image_path = None
+
         st.divider()
         st.markdown("### 🎬 生成模式")
 
         gen_mode = st.radio(
             "选择视频生成方式",
-            options=["📝 普通模式 (单主题 → 自动剪辑)", "🎬 分镜叙事 (AI生成多场景 → Kling视频 → 顺序拼接)"],
+            options=["📝 普通模式 (单主题 → 自动剪辑)", "🎬 分镜叙事 (AI生成多场景 → 可灵视频 → 拼接)"],
             index=1 if st.session_state["storyboard_mode"] else 0,
             horizontal=False,
             key="gen_mode_radio",
@@ -584,19 +590,80 @@ with left_panel:
         scene_count = 5
         if storyboard_mode:
             with st.container(border=True):
-                st.markdown("""
-                **分镜叙事模式**：LLM 自动将主题拆分为多个场景 → 
-                每个场景生成独立的画面描述和旁白 → 按场景顺序拼接成完整叙事视频
-                """)
-                scene_count = st.slider(
-                    "分镜数量",
-                    min_value=2, max_value=8, value=5, step=1,
-                    help="场景越多，视频越长越丰富（但生成时间也越长）",
+                st.caption("LLM 自动拆分主题为多个场景，每场景独立生成画面描述 → 可灵 API 生成视频 → TTS 配音 → 拼接")
+
+                scene_count = st.slider("分镜数量", min_value=2, max_value=8, value=5, step=1)
+
+                # ---- Kling 视频参数 ----
+                st.divider()
+                st.markdown("**🎥 视频参数**")
+
+                col_a, col_b = st.columns(2)
+                with col_a:
+                    video_mode = st.selectbox(
+                        "画质模式",
+                        options=["std (标准)", "pro (高画质)"],
+                        index=0,
+                        help="std=快速低费  pro=高画质约3-5分钟/条",
+                        key="kling_mode",
+                    )
+                    kling_mode = "pro" if "pro" in video_mode else "std"
+
+                    model_version = st.selectbox(
+                        "模型版本",
+                        options=["kling-v1-6 (推荐)", "kling-v1-5", "kling-v2 (最新)", "kling-v2-master"],
+                        index=0,
+                        key="kling_model",
+                    )
+
+                with col_b:
+                    ratio_display = st.selectbox(
+                        "画面比例",
+                        options=["16:9 (横屏)", "9:16 (竖屏/抖音)", "1:1 (方形)"],
+                        index=1,
+                        help="抖音推流推荐 9:16 竖版",
+                        key="kling_ratio",
+                    )
+                    if "9:16" in ratio_display:
+                        kling_ratio = "9:16"
+                    elif "1:1" in ratio_display:
+                        kling_ratio = "1:1"
+                    else:
+                        kling_ratio = "16:9"
+
+                    kling_model = model_version.split(" ")[0]
+
+                # ---- 图生视频 ----
+                st.divider()
+                st.markdown("**🖼️ 参考图片 (可选)**")
+                ref_image = st.file_uploader(
+                    "上传商品图或其他参考图 → 开启图生视频模式",
+                    type=["jpg", "jpeg", "png", "webp"],
+                    key="kling_ref_image",
+                    help="上传后，AI将基于此图生成动态视频（商品展示等）",
                 )
-                # 提示 Kling API 状态
+                ref_image_path = None
+                if ref_image:
+                    import tempfile
+                    tmp_dir = tempfile.mkdtemp()
+                    ref_image_path = os.path.join(tmp_dir, ref_image.name)
+                    with open(ref_image_path, "wb") as f:
+                        f.write(ref_image.getvalue())
+                    st.success(f"✅ 参考图已上传: {ref_image.name}")
+                    st.session_state["kling_ref_image_path"] = ref_image_path
+
+                # 恢复已上传的路径
+                if "kling_ref_image_path" in st.session_state and not ref_image:
+                    ref_image_path = st.session_state["kling_ref_image_path"]
+
+                # ---- API 状态 ----
                 has_kling = config.app.get("kling_access_key") and config.app.get("kling_secret_key")
                 if not has_kling:
-                    st.warning("⚠️ 尚未配置可灵 API（在左侧 Basic Settings 中配置）")
+                    st.warning("⚠️ 尚未配置可灵 API Key（展开顶部 Basic Settings → 右侧 Kling 区域）")
+                elif ref_image_path:
+                    st.info("🖼️ 图生视频模式：AI 将基于参考图 + prompt 生成动态展示视频")
+                else:
+                    st.info("📝 文生视频模式：AI 根据分镜描述从零生成视频")
 
         if st.button(
             tr("Generate Video Script and Keywords") if not storyboard_mode else "🎬 生成分镜脚本",
@@ -610,14 +677,21 @@ with left_panel:
                     sb = llm.generate_storyboard(
                         video_subject=params.video_subject,
                         scene_count=scene_count,
-                        language=params.video_language,
+                        has_reference_image=bool(ref_image_path),
                     )
-                    st.session_state["video_script"] = _json.dumps(sb["scenes"], ensure_ascii=False, indent=2)
+                    st.session_state["video_script"] = _json.dumps(sb, ensure_ascii=False, indent=2)
                     st.session_state["video_terms"] = ", ".join(
-                        s["visual_prompt"] for s in sb["scenes"]
+                        s["visual_prompt"] for s in sb
                     )
                     st.session_state["storyboard_data"] = sb
-                    st.success(f"✅ 生成 {len(sb['scenes'])} 个分镜")
+                    # 保存 Kling 参数到 session state
+                    st.session_state["kling_params"] = {
+                        "mode": kling_mode,
+                        "model": kling_model,
+                        "aspect_ratio": kling_ratio,
+                        "ref_image_path": ref_image_path,
+                    }
+                    st.success(f"✅ 生成 {len(sb)} 个分镜 ({kling_mode}/{kling_ratio}/{kling_model})")
                 else:
                     script = llm.generate_script(
                         video_subject=params.video_subject, language=params.video_language
